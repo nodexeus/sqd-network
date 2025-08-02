@@ -64,7 +64,7 @@ impl MetricsServer {
         // Enhanced error handling for server binding
         let listener = match TcpListener::bind(&addr).await {
             Ok(listener) => {
-                log::info!("Metrics server successfully bound to {}", addr);
+                log::debug!("Metrics server successfully bound to {}", addr);
                 listener
             }
             Err(e) => {

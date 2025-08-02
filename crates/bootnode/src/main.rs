@@ -105,11 +105,11 @@ async fn start_metrics_server(
         return None;
     }
 
-    log::info!("Starting metrics HTTP server on {}:{}", config.host, config.port);
-    log::info!("Metrics endpoints will be available at:");
-    log::info!("  - Health check: http://{}:{}/health", config.host, config.port);
-    log::info!("  - Readiness check: http://{}:{}/ready", config.host, config.port);
-    log::info!("  - Prometheus metrics: http://{}:{}/metrics", config.host, config.port);
+    log::debug!("Starting metrics HTTP server on {}:{}", config.host, config.port);
+    log::debug!("Metrics endpoints will be available at:");
+    log::debug!("  - Health check: http://{}:{}/health", config.host, config.port);
+    log::debug!("  - Readiness check: http://{}:{}/ready", config.host, config.port);
+    log::debug!("  - Prometheus metrics: http://{}:{}/metrics", config.host, config.port);
 
     // Validate configuration before attempting to start
     if let Err(e) = config.socket_addr() {
@@ -152,7 +152,7 @@ async fn start_metrics_server(
     }
 
     Some(tokio::spawn(async move {
-        log::info!("Metrics server task started successfully");
+        log::debug!("Metrics server task started successfully");
         match server.run(host.clone(), port).await {
             Ok(()) => {
                 log::info!("Metrics server on {}:{} shut down gracefully", host, port);
@@ -185,10 +185,10 @@ async fn main() -> anyhow::Result<()> {
     
     // Log monitoring configuration
     if metrics_config.enabled {
-        log::info!("Monitoring enabled - HTTP server will bind to {}:{}", metrics_config.host, metrics_config.port);
-        log::info!("Metrics endpoints: /health, /ready, /metrics");
+        log::debug!("Monitoring enabled - HTTP server will bind to {}:{}", metrics_config.host, metrics_config.port);
+        log::debug!("Metrics endpoints: /health, /ready, /metrics");
         metrics::register_metrics(&mut registry);
-        log::info!("Prometheus metrics registry initialized successfully");
+        log::debug!("Prometheus metrics registry initialized successfully");
     } else {
         log::info!("Monitoring disabled - no HTTP server or metrics collection will be started");
     }
@@ -256,11 +256,11 @@ async fn main() -> anyhow::Result<()> {
     let _metrics_server_handle: Option<JoinHandle<()>> = if metrics_config.should_start_server() {
         match start_metrics_server(metrics_config.clone(), registry.clone(), bootnode_state.clone()).await {
             Some(handle) => {
-                log::info!("✓ Metrics server successfully started and ready to accept connections");
-                log::info!("  You can now monitor the bootnode using:");
-                log::info!("  curl http://{}:{}/health", metrics_config.host, metrics_config.port);
-                log::info!("  curl http://{}:{}/ready", metrics_config.host, metrics_config.port);
-                log::info!("  curl http://{}:{}/metrics", metrics_config.host, metrics_config.port);
+                log::debug!("✓ Metrics server successfully started and ready to accept connections");
+                log::debug!("  You can now monitor the bootnode using:");
+                log::debug!("  curl http://{}:{}/health", metrics_config.host, metrics_config.port);
+                log::debug!("  curl http://{}:{}/ready", metrics_config.host, metrics_config.port);
+                log::debug!("  curl http://{}:{}/metrics", metrics_config.host, metrics_config.port);
                 Some(handle)
             }
             None => {
@@ -413,7 +413,7 @@ async fn main() -> anyhow::Result<()> {
                     // Mark DHT as ready when we have routing table entries
                     if !bootnode_state.is_dht_ready() {
                         bootnode_state.set_dht_ready(true);
-                        log::info!("DHT readiness achieved - /ready endpoint will now return ready=true");
+                        log::debug!("DHT readiness achieved - /ready endpoint will now return ready=true");
                     }
                     if let Err(_) = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                         metrics::record_network_event("routing_updated");
@@ -468,7 +468,7 @@ async fn main() -> anyhow::Result<()> {
                 }
             }
             SwarmEvent::Behaviour(BehaviourEvent::Autonat(autonat::Event::StatusChanged { old, new })) => {
-                log::info!("NAT status changed from {:?} to {:?}", old, new);
+                log::debug!("NAT status changed from {:?} to {:?}", old, new);
                 if metrics_config.enabled {
                     if let Err(_) = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                         metrics::record_network_event("autonat_status_changed");
